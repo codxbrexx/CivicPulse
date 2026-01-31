@@ -1,0 +1,13 @@
+{
+    "name": "civicpulse-backend",
+    "private": true,
+    "version": "0.1.0",
+    "scripts": {
+        "dev": "ts-node-dev src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js"
+    },
+    "devDependencies": {
+        "prettier": "^3.8.1"
+    }
+}
