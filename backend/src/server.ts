@@ -1,36 +1,38 @@
-import express, { Request, Response } from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load env vars
+import dotenv from "dotenv";
 dotenv.config();
+
+import express, { Request, Response } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { db } from "./config/db";
+import authRoutes from "./routes/auth.routes";
+import { protect } from "./middlewares/auth.middleware";
+// Load environment variables FIRST
+
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/civicpulse';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI is undefined — dotenv failed");
+  throw new Error("MONGODB_URI is undefined — check your .env file");
 }
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Database Connection
-mongoose
-    .connect(MONGODB_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch((err) => console.error('MongoDB connection error:', err));
+app.use(cookieParser());
 
 // Routes
-app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', message: 'Backend is running' });
+app.use("/api/auth", authRoutes);
+app.get("/api/profile", protect, (req: any, res) => {
+  res.json({ message: "Protected route accessed", user: req.user });
 });
 
+// Database Connection
+db();
+
 // Start Server
-export const server = app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
