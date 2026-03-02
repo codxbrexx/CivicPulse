@@ -1,32 +1,42 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express, { Request, Response } from "express";
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+
 import { db } from "./config/db";
 import authRoutes from "./routes/auth.routes";
-import { protect } from "./middlewares/auth.middleware";
-// Load environment variables FIRST
+import societyRoutes from "./routes/society.routes";
+import issueRoutes from "./routes/issue.routes";
 
+import { protect } from "./middlewares/auth.middleware";
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI is undefined — check your .env file");
-}
+// 🔐 CORS (important for cookies)
+app.use(
+  cors({
+    origin: "http://localhost:3000", // change if needed
+    credentials: true
+  })
+);
 
-// Middleware
-app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.get("/api/profile", protect, (req: any, res) => {
-  res.json({ message: "Protected route accessed", user: req.user });
+app.use("/api/society", societyRoutes);
+app.use("/api/issues", issueRoutes);
+
+// Test Protected Route
+app.get("/api/profile", protect, (req, res) => {
+  res.json({
+    message: "Protected route accessed",
+    user: req.user
+  });
 });
 
 // Database Connection

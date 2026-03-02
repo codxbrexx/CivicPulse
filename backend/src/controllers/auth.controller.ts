@@ -3,27 +3,42 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // SIGNUP
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role, flatNumber, society } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    if (!name || !email || !password || !society) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const existingUser = await User.findOne({ email, society });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+      return res.status(400).json({ message: "User already exists in this society" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.create({
+    const newUser = await User.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: role || "resident",
+      flatNumber,
+      society
     });
 
-    res.status(201).json({ message: "User created" });
+    res.status(201).json({
+      message: "User created successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role
+      }
+    });
 
   } catch (error) {
     console.error("SIGNUP ERROR:", error);
@@ -35,9 +50,14 @@ export const signup = async (req: Request, res: Response) => {
 // LOGIN
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, society } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email || !password || !society) {
+      return res.status(400).json({ message: "Missing credentials" });
+    }
+
+    const user = await User.findOne({ email, society }).select("+password");
+
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -52,20 +72,30 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign(
-      { id: user._id },
+      {
+        id: user._id,
+        role: user.role,
+        society: user.society
+      },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // 🔐 Send token in HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // true in production
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    res.json({ message: "Login successful" });
+    res.json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        role: user.role
+      }
+    });
 
   } catch (error) {
     console.error("LOGIN ERROR:", error);
@@ -76,6 +106,11 @@ export const login = async (req: Request, res: Response) => {
 
 // LOGOUT
 export const logout = async (req: Request, res: Response) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production"
+  });
+
   res.json({ message: "Logout successful" });
 };

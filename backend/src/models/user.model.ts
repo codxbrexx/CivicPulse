@@ -1,15 +1,60 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
-interface IUser {
+export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  role: "resident" | "staff" | "admin";
+  flatNumber?: string;
+  society: mongoose.Types.ObjectId;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const userSchema = new mongoose.Schema<IUser>({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-});
+const userSchema = new mongoose.Schema<IUser>(
+  {
+    name: { type: String, required: true },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+
+    password: {
+      type: String,
+      required: true,
+      select: false
+    },
+
+    role: {
+      type: String,
+      enum: ["resident", "staff", "admin"],
+      default: "resident"
+    },
+
+    flatNumber: {
+      type: String,
+      required: function () {
+        return this.role === "resident";
+      }
+    },
+
+    society: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Society",
+      required: true
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  },
+  { timestamps: true }
+);
 
 export const User = mongoose.model<IUser>("User", userSchema);
