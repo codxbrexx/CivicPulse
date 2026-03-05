@@ -9,9 +9,14 @@ export interface IIssue extends Document {
   priorityScore: number;
   reportCount: number;
   reportedBy: mongoose.Types.ObjectId;
+  reporters: mongoose.Types.ObjectId[];
   assignedTo?: mongoose.Types.ObjectId;
+  assignedBy?: mongoose.Types.ObjectId;
+  assignedAt?: Date;
   society: mongoose.Types.ObjectId;
   slaDeadline: Date;
+  isEscalated: boolean;
+  breachedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,9 +61,25 @@ const issueSchema = new mongoose.Schema<IIssue>(
       required: true
     },
 
+    reporters: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ],
+
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
+    },
+
+    assignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+
+    assignedAt: {
+      type: Date,
     },
 
     society: {
@@ -69,7 +90,16 @@ const issueSchema = new mongoose.Schema<IIssue>(
 
     slaDeadline: {
       type: Date
-    }
+    },
+
+    isEscalated: {
+      type: Boolean,
+      default:false,
+    },
+
+    breachedAt: {
+      type: Date
+    },
   },
   { timestamps: true }
 );

@@ -34,6 +34,7 @@ export const getSocieties = async (req: Request, res: Response) => {
     const societies = await Society.find().populate("admin", "name email");
     res.json(societies);
   } catch (error) {
+    console.error("GET SOCIETIES ERROR:",error);
     res.status(500).json({ message: "Failed to fetch societies" });
   }
 };

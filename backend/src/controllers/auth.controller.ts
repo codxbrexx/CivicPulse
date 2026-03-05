@@ -10,7 +10,7 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const { name, email, password, role, flatNumber, society } = req.body;
 
-    if (!name || !email || !password || !society) {
+    if (!name || !email || !password ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password, society } = req.body;
 
-    if (!email || !password || !society) {
+    if (!email || !password ) {
       return res.status(400).json({ message: "Missing credentials" });
     }
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  assignIssue,
   createIssue,
   getSocietyIssues,
   updateIssueStatus
@@ -18,5 +19,8 @@ router.get("/", protect, getSocietyIssues);
 
 // Update issue status (staff/admin)
 router.patch("/:id", protect, authorize("staff", "admin"), updateIssueStatus);
+
+// Assign issue (admin only)
+router.patch("/:id/assign", protect, authorize("admin"), assignIssue);
 
 export default router;

@@ -21,11 +21,12 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     req.user = {
       id: user._id.toString(),
       role: user.role,
-      society: user.society.toString()
+      society: user.society?.toString()
     };
 
     next();
   } catch (error) {
+    console.error("AUTH MIDDLEWARE ERROR:", error);
     return res.status(401).json({ message: "Invalid token" });
   }
 };
